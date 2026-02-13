@@ -45,3 +45,6 @@ phpcs.xml
 
 # Composer (repo root only)
 /vendor/
+
+# Cursor rules (local preferences)
+.cursor/rules/git-commits.mdc
