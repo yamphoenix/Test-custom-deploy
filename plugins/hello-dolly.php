@@ -5,6 +5,7 @@
  * Description: This is a test plugin for custom deployment.
  * Version: 1.0
  * Author: Yashita
+ * * Description: 🚀 CUSTOM DEPLOYMENT TEST - This is not just a plugin, it symbolizes...
  */
 
 function hello_dolly() {
