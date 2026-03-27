@@ -1,0 +1,58 @@
+name: Deploy to VIP
+
+on:
+  push:
+    branches:
+      - develop
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to VIP Develop Environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install VIP-CLI
+        run: npm install -g @automattic/vip
+
+      - name: Verify VIP-CLI
+        run: vip --version
+
+      - name: Create deployment archive
+        run: |
+          tar -cvf deploy.tar \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='.DS_Store' \
+            client-mu-plugins \
+            plugins \
+            themes \
+            vip-config \
+            2>/dev/null || true
+          
+          echo "Archive contents:"
+          tar -tvf deploy.tar
+
+      - name: Validate deployment archive
+        env:
+          WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
+        run: |
+          vip @yashita-test.develop app deploy validate deploy.tar
+
+      - name: Deploy to VIP
+        env:
+          WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
+        run: |
+          vip @yashita-test.develop app deploy deploy.tar \
+            --message "Deploy from personal repo: ${{ github.sha }} - ${{ github.event.head_commit.message || 'Manual trigger' }}" \
+            --force
