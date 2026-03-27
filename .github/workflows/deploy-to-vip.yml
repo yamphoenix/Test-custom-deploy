@@ -11,7 +11,7 @@ jobs:
   deploy:
     name: Deploy to VIP Develop Environment
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
 
       - name: Create deployment archive
         run: |
-          tar -cvf deploy.tar \
+          tar -czvf deploy.tar.gz \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='node_modules' \
@@ -39,7 +39,7 @@ jobs:
             themes \
             vip-config \
             2>/dev/null || true
-          
+
           echo "Archive contents:"
           tar -tvf deploy.tar
 
@@ -47,12 +47,12 @@ jobs:
         env:
           WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
         run: |
-          vip @yashita-test.develop app deploy validate deploy.tar
+          vip @yashita-test.develop app deploy validate deploy.tar.gz
 
       - name: Deploy to VIP
         env:
           WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
         run: |
-          vip @yashita-test.develop app deploy deploy.tar \
-            --message "Deploy from personal repo: ${{ github.sha }} - ${{ github.event.head_commit.message || 'Manual trigger' }}" \
+          vip @yashita-test.develop app deploy deploy.tar.gz \
+            --message "Deploy: ${{ github.event.head_commit.message || 'Manual trigger' }}" \
             --force
