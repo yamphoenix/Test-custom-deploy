@@ -41,7 +41,7 @@ jobs:
             2>/dev/null || true
 
           echo "Archive contents:"
-          tar -tvf deploy.tar
+          tar -tvf deploy.tar.gz
 
       - name: Validate deployment archive
         env:
