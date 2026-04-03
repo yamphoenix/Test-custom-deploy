@@ -1,59 +1,60 @@
-name: Deploy to VIP
+name: Deploy to VIP Develop Environment
 
 on:
   push:
     branches:
       - develop
-
   workflow_dispatch:
+    inputs:
+      SKIP_CHECKOUT:
+        description: 'Skip the checkout step'
+        required: false
+        default: 'false'
 
 jobs:
   deploy:
-    name: Deploy to VIP Develop Environment
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: "Check repo configuration"
+        run: |
+          if [ -n "${{ secrets.VIP_DEPLOY_TOKEN }}" ]; then
+            echo "Repository has the secrets set."
+          else
+            echo "VIP_DEPLOY_TOKEN is not configured."
+            echo "Save the deploy token as VIP_DEPLOY_TOKEN."
+            exit 1
+          fi
+          
+          DEPLOY_ENVIRONMENT="@yashita-test.develop"
+          echo "DEPLOY_ENVIRONMENT=${DEPLOY_ENVIRONMENT}" >> $GITHUB_ENV
+        shell: bash
 
-      - name: Setup Node.js
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        if: ${{ github.event.inputs.SKIP_CHECKOUT != 'true' }}
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: lts/*
+          cache: npm
 
-      - name: Install VIP-CLI
-        run: npm install -g @automattic/vip
-
-      - name: Verify VIP-CLI
-        run: vip --version
-
-      - name: Create deployment archive
+      - name: Install VIP CLI
         run: |
-          # Create a single root directory
-          mkdir -p app
-          
-          # Copy folders into the root directory
-          [ -d "client-mu-plugins" ] && cp -r client-mu-plugins app/
-          [ -d "plugins" ] && cp -r plugins app/
-          [ -d "themes" ] && cp -r themes app/
-          [ -d "vip-config" ] && cp -r vip-config app/
-          
-          # Create the archive with single root
-          tar -czvf deploy.tar.gz app
-          
-          echo "Archive contents:"
-          tar -tvf deploy.tar.gz
+          npm install -g @automattic/vip
+        shell: bash
 
-      - name: Validate deployment archive
+      - name: Compress the repo
+        run: |
+          mkdir wrap_folder
+          shopt -s extglob
+          cp -r !(wrap_folder) wrap_folder/
+          zip -r repo.zip wrap_folder
+        shell: bash
+
+      - name: Deploy via VIP-CLI
+        run: |
+          vip app deploy ${{ env.DEPLOY_ENVIRONMENT }} ./repo.zip --message "${{ github.event.head_commit.message }}" --force
+        shell: bash
         env:
-          WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
-        run: |
-          vip @yashita-test.develop app deploy validate deploy.tar.gz
-
-      - name: Deploy to VIP
-        env:
-          WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
-        run: |
-          vip @yashita-test.develop app deploy deploy.tar.gz \
-            --message "Deploy: ${{ github.event.head_commit.message || 'Manual trigger' }}" \
-            --force
+          VIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
