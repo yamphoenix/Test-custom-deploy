@@ -15,45 +15,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: "Check repo configuration"
-        run: |
-          if [ -n "${{ secrets.VIP_DEPLOY_TOKEN }}" ]; then
-            echo "Repository has the secrets set."
-          else
-            echo "VIP_DEPLOY_TOKEN is not configured."
-            echo "Save the deploy token as VIP_DEPLOY_TOKEN."
-            exit 1
-          fi
-          
-          DEPLOY_ENVIRONMENT="@yashita-test.develop"
-          echo "DEPLOY_ENVIRONMENT=${DEPLOY_ENVIRONMENT}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        if: ${{ github.event.inputs.SKIP_CHECKOUT != 'true' }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: Automattic/vip-actions/custom-deployment@trunk
         with:
-          node-version: lts/*
-
-      - name: Install VIP CLI
-        run: |
-          npm install -g @automattic/vip
-        shell: bash
-
-      - name: Compress the repo
-        run: |
-          mkdir wrap_folder
-          shopt -s extglob
-          cp -r !(wrap_folder) wrap_folder/
-          zip -r repo.zip wrap_folder
-        shell: bash
-
-      - name: Deploy via VIP-CLI
-        run: |
-          vip app deploy ${{ env.DEPLOY_ENVIRONMENT }} ./repo.zip --message "${{ github.event.head_commit.message }}" --force
-        shell: bash
-        env:
+          # GitHub secret that stores your Custom Deployment token
+          # You can name the secret anything; here it's VIP_DEPLOY_TOKEN
           WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
+
+          # VIP environment handle – confirm this matches your app/env
+          # Format: "@appslug.environment"
+          ENVIRONMENT_ALIAS: "@yashita-test.develop"
+
+          # Message shown in VIP deployment logs
+          RELEASE_NAME: ${{ github.event.head_commit.message }}
+
+          # Keep your manual input logic for optional checkout
+          SKIP_CHECKOUT: ${{ github.event.inputs.SKIP_CHECKOUT || 'false' }}
