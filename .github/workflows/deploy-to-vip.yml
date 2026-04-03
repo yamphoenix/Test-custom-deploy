@@ -29,17 +29,18 @@ jobs:
 
       - name: Create deployment archive
         run: |
-          tar -czvf deploy.tar.gz \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='.DS_Store' \
-            client-mu-plugins \
-            plugins \
-            themes \
-            vip-config \
-            2>/dev/null || true
-
+          # Create a single root directory
+          mkdir -p app
+          
+          # Copy folders into the root directory
+          [ -d "client-mu-plugins" ] && cp -r client-mu-plugins app/
+          [ -d "plugins" ] && cp -r plugins app/
+          [ -d "themes" ] && cp -r themes app/
+          [ -d "vip-config" ] && cp -r vip-config app/
+          
+          # Create the archive with single root
+          tar -czvf deploy.tar.gz app
+          
           echo "Archive contents:"
           tar -tvf deploy.tar.gz
 
