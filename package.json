@@ -1,0 +1,9 @@
+{
+  "name": "vip-custom-deployment-build",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal Node project to support VIP GitHub Actions npm caching",
+  "scripts": {
+    "build": "echo \"No build step yet\""
+  }
+}
