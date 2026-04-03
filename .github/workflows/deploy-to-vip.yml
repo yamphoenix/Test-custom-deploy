@@ -37,7 +37,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: npm
 
       - name: Install VIP CLI
         run: |
@@ -57,4 +56,4 @@ jobs:
           vip app deploy ${{ env.DEPLOY_ENVIRONMENT }} ./repo.zip --message "${{ github.event.head_commit.message }}" --force
         shell: bash
         env:
-          VIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
+          WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
