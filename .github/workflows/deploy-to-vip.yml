@@ -4,29 +4,21 @@ on:
   push:
     branches:
       - develop
-  workflow_dispatch:
-    inputs:
-      SKIP_CHECKOUT:
-        description: 'Skip the checkout step'
-        required: false
-        default: 'false'
+  workflow_dispatch: {}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: Automattic/vip-actions/custom-deployment@trunk
         with:
           # GitHub secret that stores your Custom Deployment token
-          # You can name the secret anything; here it's VIP_DEPLOY_TOKEN
           WPVIP_DEPLOY_TOKEN: ${{ secrets.VIP_DEPLOY_TOKEN }}
 
-          # VIP environment handle – confirm this matches your app/env
+          # VIP environment alias (confirm this matches your app/env)
           # Format: "@appslug.environment"
           ENVIRONMENT_ALIAS: "@yashita-test.develop"
 
           # Message shown in VIP deployment logs
           RELEASE_NAME: ${{ github.event.head_commit.message }}
-
-          # Keep your manual input logic for optional checkout
-          SKIP_CHECKOUT: ${{ github.event.inputs.SKIP_CHECKOUT || 'false' }}
